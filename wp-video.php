@@ -2,7 +2,7 @@
 /*
 Plugin Name: wp-video
 Plugin URI:  http://www.idayer.com/
-Description: 使用 [video] 短代码 在 WordPress 中插入视频,支持优酷,土豆,56,搜狐,爱奇异,腾迅,新浪。该插件支持视频PC和iOS播放播放，在电脑上通过flash播放,ios平台则自动识别并通过html5的方式播放。用法：<a href="http://www.idayer.com/my-first-plugin-wp-video.html">http://www.idayer.com/my-first-plugin-wp-video.html</a>
+Description: 使用 [video] 短代码 在 WordPress 中插入视频,支持优酷,土豆,56,搜狐,爱奇异,腾迅,新浪,PPTV。该插件支持视频PC和iOS播放播放，在电脑上通过flash播放,ios平台则自动识别并通过html5的方式播放。用法：<a href="http://www.idayer.com/my-first-plugin-wp-video.html">http://www.idayer.com/my-first-plugin-wp-video.html</a>
 Version:1.0
 Author: neo
 Author URI: http://www.idayer.com/
@@ -185,11 +185,70 @@ function wp_video_shortcode_callback( $atts,$content ) {
 		</script>
 	';
 	}
+	//pptv
+	else if(strpos($content,'v.pptv.com/')){
+			$pptv='';
+			$pJson='';
+			$result=makeRequest($content);
+			 if(preg_match("#\"id\":(\d+),\"id_encode\":\"(.*?)\"#i",$result,$matches)){
+				//swf 
+				$pptv=$matches[2];
+				//id
+				$pJson="http://web-play.pptv.com/webplay3-0-".$matches[1].".xml?version=4&type=m3u8.web.pad&cb=pptvback";
+			 } 
+		return '
+		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src= "http://player.pptv.com/v/'.$pptv.'.swf"  width= "'.$width.'" height="'.$height.'" align="middle" allowScriptAccess="always" allownetworking="all" allowfullscreen="true" type="application/x-shockwave-flash"  wmode="window" ></embed></p>
+		<script type="text/javascript">
+			//pptv回调中处理m3u8函数
+			pptvm3u8=function(Z){
+					var ab,ae,ac,ad;
+					for(var aa in Z.childNodes){
+						var W=Z.childNodes[aa];
+						if(W.tagName==="channel"){
+							for(var Y in W.childNodes){
+							var V=W.childNodes[Y];
+							if(V.tagName==="file"||V.tagName==="stream"){
+							var ag=V.tagName==="file"?V.cur:V.cft;
+							for(var X in V.childNodes)
+							{var af=V.childNodes[X];if(af.ft===ag){ab=ag;ae=af.rid;break}}}
+							if(ab){break}}}
+						else{if(W.tagName==="dt"&&W.ft==ab){
+							for(var Y in W.childNodes){
+							var l=W.childNodes[Y];
+								if(l.tagName==="sh"){
+									ac=l.childNodes[0]}else{
+									if(l.tagName==="key"){
+									ad=l.childNodes[0]}}}}}}
+						if(ab!=undefined&&ae&&ac){
+							var m3u8;
+							ae=ae.replace(".mp4","");
+							if(ad){
+								m3u8="http://"+ac+"/"+ae+".m3u8?type=m3u8.web.pad&k="+ad;
+								return m3u8;}
+							else{
+								m3u8="http://"+ac+"/"+ae+".m3u8?type=m3u8.web.pad";
+								return m3u8;}}
+						else{}}
+			var scr = document.createElement("script");
+			scr.src = "'.$pJson.'";
+			window["pptvback"]=function(result){
+				var m3u8=pptvm3u8(result);;
+				var ua = navigator.userAgent.toLowerCase();
+				if(ua.match(/ipad/i)||ua.match(/Macintosh/i)){
+					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="'.$width.'" height="'.$ipad_height.'" controls="controls" autoplay="" preload="" src="\'+m3u8+\'" ></video>\';
+				}else if(ua.match(/iphone/i)){
+					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="240" height="180" controls="controls" autoplay="" preload="" src="\'+m3u8+\'" ></video>\';
+				}
+				delete window["pptvback"];
+			}
+			document.body.appendChild(scr);
+		</script>
+	';
+	}
 }
 
 
 //各种方法
-//土豆
 
 //土豆-填充序列到9位 
 function fillZero($num,$n){
