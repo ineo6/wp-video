@@ -2,7 +2,7 @@
 /*
 Plugin Name: wp-video
 Plugin URI:  http://www.idayer.com/my-first-plugin-wp-video.html
-Description: 使用 [video] 短代码 在 WordPress 中插入视频,支持优酷,土豆,56,搜狐,爱奇艺,腾迅,新浪,PPTV。该插件支持视频PC和iOS播放播放。同时,现在支持部分网站无广告，感谢<a href="http://userscripts.org/scripts/show/119622">YoukuAntiADs</a>的修改swf播放器。
+Description: 使用 [video] 短代码 在 WordPress 中插入视频,支持优酷,56,搜狐,爱奇艺,腾迅,新浪,PPTV。该插件支持视频PC和iOS播放播放。同时,现在支持部分网站无广告，感谢<a href="http://userscripts.org/scripts/show/119622">YoukuAntiADs</a>的修改swf播放器。
 Version:1.1
 Author: Neo
 Author URI: http://www.idayer.com/
@@ -15,20 +15,7 @@ function wp_video_shortcode_callback( $atts,$content ) {
 		'width' => '480',
 		'height' => '400',
 	), $atts ) );
-	$plugin_url = plugin_dir_url( __FILE__);
-	$player=array(
-		'youku_loader'=>$plugin_url.'player/loader.swf',
-		'youku_player'=>$plugin_url.'player/player.swf',
-		'ku6'=>$plugin_url.'player/ku6.swf',
-		'iqiyi'=>$plugin_url.'player/iqiyi.swf',
-		'iqiyi5'=> $plugin_url.'player/iqiyi5.swf',
-		'iqiyi_out'=> $plugin_url.'player/iqiyi_out.swf',
-		'tudou'=> $plugin_url.'player/tudou.swf',
-		'tudou_olc'=> $plugin_url.'player/olc_8.swf',
-		'tudou_sp'=> $plugin_url.'player/sp.swf',
-		'letv'=> $plugin_url.'player/letv.swf'
-	);
-	
+
 	global $wp_video_id;
 	if($wp_video_id){
 		$wp_video_id++;
@@ -41,7 +28,7 @@ function wp_video_shortcode_callback( $atts,$content ) {
 	//youku
 	if(preg_match('#http://v.youku.com/v_show/id_(.*?).html#i',$content,$matches)){
 		return '
-		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src="'.$player["youku_loader"].'?VideoIDS='.$matches[1].'&winType=adshow&isAutoPlay=false" allowFullScreen="true" quality="high" width="'.$width.'" height="'.$height.'" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash"></embed></p>
+		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src="http://player.youku.com/player.php/sid/XNzA2MzgwNzU2/v.swf?VideoIDS='.$matches[1].'&winType=adshow&isAutoPlay=false" allowFullScreen="true" quality="high" width="'.$width.'" height="'.$height.'" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash"></embed></p>
 		<script type="text/javascript">
 			var ua = navigator.userAgent.toLowerCase();
 			if(ua.match(/ipad/i)||ua.match(/Macintosh/i)){
@@ -52,48 +39,29 @@ function wp_video_shortcode_callback( $atts,$content ) {
 		</script>
 	';
 	}
+
 	//56
-	else if(preg_match('#http://www.56.com/.*?[-_](\w+).html#i',$content,$matches)){
+	else if(preg_match('#http://www.56.com/(.*?)/v_(.*?).html#i',$content,$matches)){
+		$result=makeRequest($content);
+		if(preg_match('#"id":(\d+)#i',$result,$matches2))
+		{
+			$id=$matches2[1];
+		}
 		return '
-		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src="http://player.56.com/v_'.$matches[1].'.swf"  width="'.$width.'" height="'.$height.'" type="application/x-shockwave-flash" allowFullScreen="true" allowNetworking="all" allowScriptAccess="always" ></embed></p>
+		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src="http://player.56.com/v_'.$matches[2].'.swf"  width="'.$width.'" height="'.$height.'" type="application/x-shockwave-flash" allowFullScreen="true" allowNetworking="all" allowScriptAccess="always" ></embed></p>
 		<script type="text/javascript">
 			var ua = navigator.userAgent.toLowerCase();
 			if(ua.match(/ipad/i)||ua.match(/Macintosh/i)){
-				document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="'.$width.'" height="'.$ipad_height.'" controls="controls" autoplay="" preload="" src="http://vxml.56.com/m3u8/'.$matches[1].'/"></video>\';
+				document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="'.$width.'" height="'.$ipad_height.'" controls="controls" autoplay="" preload="" src="http://vxml.56.com/html5/'.$id.'/?src=3g&res=qqvga"></video>\';
 			}else if(ua.match(/iphone/i)){
-				document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="240" height="180" controls="controls" autoplay="" preload="" src="http://vxml.56.com/m3u8/'.$matches[1].'/"></video>\';
+				document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="240" height="180" controls="controls" autoplay="" preload="" src="http://vxml.56.com/html5/'.$id.'/?src=3g&res=qqvga"></video>\';
 			}
 		</script>
 	';
 	}
 	
-	
-	//tudou
-	else if(strpos($content,'www.tudou.com')){
-			$tudou='';
-			$result=makeRequest($content);
-			 if(preg_match('#iid:\s*(\d+)#i',$result,$matches)){
-				$iid=$matches[1];
-				$label=array("l/t41CVYF_JgY","a/ZJ9MGAsJDjc","v/pPFIJQGK8Ro");
-				$padiid=fillZero($iid,9);
-				if(preg_match_all('#(\d{3})#i',$padiid,$m_iid)){
-					$idEncodeed = $m_iid[0][0].'/'.$m_iid[0][1].'/'.$m_iid[0][2];
-					$tudou="http://m3u8.tdimg.com/".$idEncodeed."2.m3u8";
-				}
-			 } 
-		return '
-		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src="'.$player["tudou_olc"].'?tvcCode=-1&swfPath='.$player["tudou_sp"].'&iid='.$iid.'&autoPlay=false"  width="'.$width.'" height="'.$height.'" type="application/x-shockwave-flash" allowscriptaccess="always"allowfullscreen="true" wmode="opaque" ></embed></p>
-		<script type="text/javascript">
-			var ua = navigator.userAgent.toLowerCase();
-			if(ua.match(/ipad/i)||ua.match(/Macintosh/i)){
-				document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="'.$width.'" height="'.$ipad_height.'" controls="controls" autoplay="" preload="" src="'.$tudou.'"></video>\';
-			}else if(ua.match(/iphone/i)){
-				document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="240" height="180" controls="controls" autoplay="" preload="" src="'.$tudou.'"></video>\';
-			}
-		</script>
-	';
-	}
-	//sohu
+
+//sohu
 	else if(strpos($content,'tv.sohu.com')){
 			$sohu='';
 			$result=makeRequest($content);
@@ -112,35 +80,31 @@ function wp_video_shortcode_callback( $atts,$content ) {
 		</script>
 	';
 	}
-	//iqiyi
+//iqiyi
 	else if(strpos($content,'.iqiyi.com/')){
 			$iqiyi='';
 			$im3u8='';
+
 			$result=makeRequest($content);
-			 if(preg_match('#data-player-videoid="(\w+)"#i',$result,$matches)){
-				$iqiyi=$matches[1];
-				$im3u8="http://cache.video.qiyi.com/m/201971/".$iqiyi."/";
+			 if(preg_match('#data-player-tvid="(\d+)"\s+data-player-videoid="(\w+)"#i',$result,$matches)){
+				$tvid=$matches[1];
+				$iqiyi=$matches[2];
+				$api="http://cache.m.iqiyi.com/jp/tmts/".$tvid."/".$iqiyi."/?uid=2007179977&cupid=qc_100001_100102&platForm=h5&type=m3u8&rate=1&callback=QV.http.__callbacks__.cbgfwrvo";
+				$result=makeRequest($api);
+				if(preg_match('#"m3u":"([\w:./]+)"#i',$result,$matches))
+					$im3u8=$matches[1];
 			 } 
 		return '
-		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src="'.$player["iqiyi_out"].'?vid='.$iqiyi.'"  width="'.$width.'" height="'.$height.'" align="middle" allowScriptAccess="always" allowFullscreen="true" type="application/x-shockwave-flash" ></embed></p>
+		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src="http://player.video.qiyi.com/'.$iqiyi.'/0/0/v_19rrhv9ifg.swf"  width="'.$width.'" height="'.$height.'" align="middle" allowScriptAccess="always" allowFullscreen="true" type="application/x-shockwave-flash" ></embed></p>
 		<script type="text/javascript">
-			var scr = document.createElement("script");
-			scr.src = "'.$im3u8.'";
-			document.body.appendChild(scr);
-			
-			var timer;
-			timer = setInterval(function(){
-				if(window.ipadUrl){
-					clearInterval(timer);
-						var ua = navigator.userAgent.toLowerCase();
+				var ua = navigator.userAgent.toLowerCase();
 				if(ua.match(/ipad/i)||ua.match(/Macintosh/i)){
-					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="'.$width.'" height="'.$ipad_height.'" controls="controls" autoplay="" preload="" src="\'+ipadUrl.data.url+\'" ></video>\';
+					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="'.$width.'" height="'.$ipad_height.'" controls="controls" autoplay="" preload="" src="'.$im3u8.'" ></video>\';
 				}else if(ua.match(/iphone/i)){
-					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="240" height="180" controls="controls" autoplay="" preload="" src="\'+ipadUrl.data.url+\'" ></video>\';
+					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="240" height="180" controls="controls" autoplay="" preload="" src="'.$im3u8.'" ></video>\';
 				}
 
-				}
-			},100)
+				
 		</script>
 	';
 	}
@@ -160,14 +124,12 @@ function wp_video_shortcode_callback( $atts,$content ) {
 			scr.src = "'.$qJson.'";
 			
 			window["qqback"]=function(result){
-				if(result.msg=="get video info failed")
-					return;
 				var mp4=result.vd.vi[0].url;
 				var ua = navigator.userAgent.toLowerCase();
 				if(ua.match(/ipad/i)||ua.match(/Macintosh/i)){
-					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="'.$width.'" height="'.$ipad_height.'" controls="controls" autoplay="false" preload="" src="\'+mp4+\'" ></video>\';
+					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="'.$width.'" height="'.$ipad_height.'" controls="controls" autoplay="" preload="" src="\'+mp4+\'" ></video>\';
 				}else if(ua.match(/iphone/i)){
-					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="240" height="180" controls="controls" autoplay="false" preload="" src="\'+mp4+\'" ></video>\';
+					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="240" height="180" controls="controls" autoplay="" preload="" src="\'+mp4+\'" ></video>\';
 				}
 				delete window["qqback"];
 			}
@@ -181,9 +143,12 @@ function wp_video_shortcode_callback( $atts,$content ) {
 			$sina='';
 			$smp4='';
 			$result=makeRequest($content);
-			 if(preg_match("#swfOutsideUrl:'(.*?)',\s* videoData:{\s* ipad_vid:'(\d+)'#i",$result,$matches)){
+			 if(preg_match("#vid:'(.*?)',\s* ipad_vid:'(\d+)'#i",$result,$matches)){
 				//swf swf
-				$sina=$matches[1];
+
+				$sina=explode('|',$matches[1]);
+				$sina=$sina[0];
+				$sina="http://p.you.video.sina.com.cn/swf/quotePlayer20140424_V4_4_42_26.swf?autoPlay=0&actlogActive=1&as=1&vid=".$sina;
 				//mp4 vid
 				$smp4="http://edge.v.iask.com.sinastorage.com/".$matches[2].".mp4";
 			 } 
@@ -207,12 +172,12 @@ function wp_video_shortcode_callback( $atts,$content ) {
 			 if(preg_match("#\"id\":(\d+),\"id_encode\":\"(.*?)\"#i",$result,$matches)){
 				//swf 
 				$pptv=$matches[2];
+				$pptv="http://player.pptv.com/v/".$pptv.".swf";
 				//id
 				$pJson="http://web-play.pptv.com/webplay3-0-".$matches[1].".xml?version=4&type=m3u8.web.pad&cb=pptvback";
 			 } 
 		return '
-		
-		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"></p>
+		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src="'.$pptv.'" flashvars="ap=0" width="'.$width.'" height="'.$height.'" align="middle" allowScriptAccess="always" allowFullscreen="true" type="application/x-shockwave-flash" ></embed></p>
 		<script type="text/javascript">
 			//pptv回调中处理m3u8函数
 			pptvm3u8=function(Z){
@@ -239,30 +204,32 @@ function wp_video_shortcode_callback( $atts,$content ) {
 							ae=ae.replace(".mp4","");
 							if(ad){
 								m3u8[0]="http://"+ac+"/"+ae+".m3u8?type=m3u8.web.pad&k="+ad;
-								m3u8[1]="http://"+ac+"/0/"+ae+".mp4?k="+ad;
+								m3u8[1]="http://"+ac+"/0/"+ae+".mp4?k="+ad+"&key=dc1ebe73b407f8f5653ddea3405407c9";
 								return m3u8;}
 							else{
 								m3u8[0]="http://"+ac+"/"+ae+".m3u8?type=m3u8.web.pad";
 								return m3u8;}}
 						else{}}
+			
+			var ua = navigator.userAgent.toLowerCase();
+			if(ua.match(/ipad/i)||ua.match(/Macintosh/i)||ua.match(/iphone/i)){
 			var scr = document.createElement("script");
 			scr.src = "'.$pJson.'";
 			window["pptvback"]=function(result){
 				var m3u8=pptvm3u8(result);
 				document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="'.$width.'" height="'.$ipad_height.'" controls="controls"  preload="" src="\'+m3u8[1]+\'" ></video>\';
-				var ua = navigator.userAgent.toLowerCase();
+				
 				if(ua.match(/ipad/i)||ua.match(/Macintosh/i)){
 					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="'.$width.'" height="'.$ipad_height.'" controls="controls" autoplay="" preload="" src="\'+m3u8[0]+\'" ></video>\';
 				}else if(ua.match(/iphone/i)){
 					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<video class="html5-player" width="240" height="180" controls="controls" autoplay="" preload="" src="\'+m3u8[0]+\'" ></video>\';
 				}
-				else if(ua.match(/firefox/i)){
-					document.getElementById(\'wp_video_'.$wp_video_id.'\').innerHTML=\'<embed src= "http://player.pptv.com/v/'.$pptv.'.swf"  width= "'.$width.'" height="'.$height.'" align="middle" allowScriptAccess="always" allownetworking="all" allowfullscreen="true" type="application/x-shockwave-flash"  wmode="window" ></embed>\';
-
-				}
 				delete window["pptvback"];
 			}
 			document.body.appendChild(scr);
+			}			
+			
+			
 		</script>
 	';
 	}
@@ -289,6 +256,7 @@ function makeRequest($url,$refer="")
         //初始化cUrl对象
 		$curl=curl_init();
 		curl_setopt($curl,CURLOPT_URL,$url);
+		curl_setopt($curl, CURLOPT_REFERER, $url );
 		curl_setopt($curl,CURLOPT_HEADER,0);
 		curl_setopt($curl, CURLOPT_USERAGENT,"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31");
 		// 设置cURL 参数，要求结果保存到字符串中还是输出到屏幕上。    
@@ -300,12 +268,12 @@ function makeRequest($url,$refer="")
 
 function wp_video(){
 	if(function_exists('add_menu_page')) {
-		add_menu_page('wp-video','wp-video','manage_options', 'wp-video/option.php') ;
+		add_menu_page('wp-video','wp-video','manage_options', 'wp_video/option.php') ;
 	}
 }
 
 function quick_button(){
-	$url=WP_PLUGIN_URL.'/wp-video/background.php?TB_window=true';
+	$url=WP_PLUGIN_URL.'/wp_video/background.php?width=640&height=250';
 	echo '<a href="'.$url.'"  class="button thickbox" data-editor="content" title="插入视频">插入视频</a>';
 }
 
