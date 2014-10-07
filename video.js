@@ -95,7 +95,7 @@
 	}
 
 	//main
-	function show(elementId, url,attrs) {
+	function show(elementId, url, attrs) {
 		try {
 			var flash = _.byId(elementId);
 			flash.innerHTML = "";
@@ -103,13 +103,13 @@
 				"src": url,
 				"controls": "controls",
 				"preload": "preload",
-				"width":attrs.width,
-				"height":attrs.height
+				"width": attrs.width,
+				"height": attrs.height
 			}, flash);
 		} catch (e) {}
 	}
 
-	function pptv(vid, kk, target,attrs) {
+	function pptv(vid, kk, target, attrs) {
 		function pptvm3u8(T) {
 			var H, J, S, U, G, V, D, R, F, L;
 			for (var O in T.childNodes) {
@@ -189,29 +189,29 @@
 		}, function(param) {
 			var m3u8 = pptvm3u8(param);
 			if (_.canPlayM3U8) {
-				show(target, m3u8,attrs);
+				show(target, m3u8, attrs);
 			} else if (_.isChromeOnMac() || _.isMobile()) {
-				show(target, m3u8,attrs);
+				show(target, m3u8, attrs);
 			}
 		}, "cb")
 	}
 
-	function sina(vid, apiOrder, target,attrs) {
+	function sina(vid, apiOrder, target, attrs) {
 		if (apiOrder == 1) {
 			_.jsonp("http://video.sina.com.cn/interface/video_ids/video_ids.php", {
 				v: vid
 			}, function(param) {
 				var ipad_id = param.ipad_vid;
 				var mp4 = "http://v.iask.com/v_play_ipad.php?vid=" + ipad_id + "&tags=newsList_web";
-				show(target, mp4,attrs);
+				show(target, mp4, attrs);
 			})
 		} else if (apiOrder == 2) {
 			show(target,
-				"http://v.iask.com/v_play_ipad.php?vid=" + vid + "&tags=newsList_web",attrs);
+				"http://v.iask.com/v_play_ipad.php?vid=" + vid + "&tags=newsList_web", attrs);
 		}
 	}
 
-	function youku(_id, target,attrs) {
+	function youku(_id, target, attrs) {
 		var mk_a3 = "b4et";
 		var mk_a4 = "boa4";
 		var userCache_a1 = "4";
@@ -421,7 +421,7 @@
 		}, "__callback")
 	}
 
-	function tudou(vid, target,attrs) {
+	function tudou(vid, target, attrs) {
 		var _id = vid;
 		var mk_a3 = "b4et";
 		var mk_a4 = "boa4";
@@ -562,7 +562,7 @@
 					}, function(e) {
 						if (e && e[0] && e[0].server) {
 							a.url = e[0].server;
-							show(target, a.url,attrs);
+							show(target, a.url, attrs);
 						}
 					})
 				});
@@ -570,7 +570,7 @@
 
 		var O = P(f, 0);
 		var N = P(f, 1);
-		var i = !_.canPlayM3U8 ? "m3u8" : "mp4";
+		var i = _.canPlayM3U8 ? "m3u8" : "mp4";
 		_.jsonp("http://v.youku.com/player/getPlaylist/VideoIDS/" + _id + "/Pf/4/Sc/2", {
 			ctype: 62,
 			ev: 1
@@ -591,8 +591,333 @@
 				h.errorCode = l.error_code;
 				n("", h)
 			} else if ("m3u8" == i)
-				show(target,x(m, 2, ""),attrs);
+				show(target, x(m, 2, ""), attrs);
 			else if ("mp4" == i)
 				C(m, h)
 		}, "__callback")
+	}
+
+	function fivesix(vid, target, attrs) {
+		_.jsonp("http://vxml.56.com/h5json/" + vid + "/", {
+			r: "",
+			src: "m"
+		}, function(param) {
+			urlList = param.df;
+			var urls = param.df[3].url;
+			if (_.canPlayM3U8 || _.isChromeOnMac() || _.isMobile())
+				show(target, urls, attrs);
+		})
+
+	}
+
+
+
+	function sohu(vid, target, attrs) {
+		var uid = 1e3 * +new Date + Math.round(1e3 * Math.random());;
+
+		function shift_en(i) {
+			var t = i.length,
+				e = 0;
+			return this.replace(/[0-9a-zA-Z]/g, function(s) {
+				var a = s.charCodeAt(0),
+					n = 65,
+					o = 26;
+				a >= 97 ? n = 97 : 65 > a && (n = 48, o = 10);
+				var r = a - n;
+				return String.fromCharCode((r + i[e++ % t]) % o + n)
+			})
+		}
+
+		function m3u8() {
+			_.jsonp("http://pad.tv.sohu.com/playinfo", {
+				vid: vid,
+				playlistid: 0,
+				sig: shift_en.call("" + (new Date).getTime(), [23, 12, 131, 1321]),
+				key: shift_en.call(vid, [23, 12, 131, 1321]),
+				uid: uid
+			}, function(param) {
+				var url = "";
+				switch (param.quality) {
+					case 2:
+						url = param.norVid;
+						break;
+					case 1:
+						url = param.highVid;
+						break;
+					case 21:
+						url = param.superVid;
+						break;
+					case 31:
+						url = param.oriVid;
+						break;
+					default:
+						url = param.highVid
+				}
+				show(target,
+					url.replace(/ipad\d+\_/, "ipad" + vid + "_") + "&uid=" + uid + "&ver=" + param.quality + "&prod=h5&pt=2&pg=1&ch=" + param.cid,
+					attrs
+				)
+			})
+		}
+
+		function mp4() {
+			_.jsonp("http://api.tv.sohu.com/v4/video/info/" + vid + ".json", {
+				site: 1,
+				api_key: "695fe827ffeb7d74260a813025970bd5",
+				sver: 1,
+				partner: 1
+			}, function(param) {
+				show(target,
+					param.data.url_high_mp4,
+					attrs
+				)
+			})
+		}
+		if (_.canPlayM3U8)
+			m3u8();
+		else if (_.isChromeOnMac() || _.isMobile())
+			mp4();
+	}
+
+
+	function qq(vid, target, attrs) {
+		_.jsonp("http://vv.video.qq.com/geturl", {
+			otype: "json",
+			vid: vid,
+			charge: 0
+		}, function(param) {
+			if (_.canPlayM3U8 || _.isChromeOnMac() || _.isMobile())
+				show(target,
+					param.vd.vi[0].url,
+					attrs);
+		})
+	}
+
+
+	function iqiyi(playPageInfo, target, attrs) {
+
+		var _0 = ["native_java_obj", "concat", "push", "fromCharCode", "undefined", "PageInfo", "", "length", "height", "orientation", "width", "devicePixelRatio", "round", "screenTop", "outerHeight", "_", "UCW", "_boluoWebView", "BOL", "TUROak1qbGlZelkwZWNhNDNlYmJhNTk3MWFjY01UazNORFF3T0E9PQ==", "TUROak1qbGlZdz09VG1wU2JGa3lSVEJOTWxacFdXMUZQUT09VGxSck0wMVhSbXBaZHowOQ==", "getTime", "cache", "sin", "abs", "substr", "replace", "charCodeAt", "function%20javaEnabled%28%29%20%7B%20%5Bnative%20code%5D%20%7D", "null", "WebkitAppearance", "style", "documentElement", "javaEnabled", "sgve", "sijsc", "md", "jc", "d", "join", "URL", ";", ";&tim=", "src", "d846d0c32d664d32b6b54ea48997a589", "sc", "__refI", "qd_jsin", "qd_wsz", "t", "__jsT", "jfakmkafklw23321f4ea32459", "__cliT", "h5", "__sigC", "__ctmM"];
+
+		function weorjjigh(_20, _49) {
+			if (_34(_0[0])) {
+				native_java_obj = {}
+			};
+			var _6 = [];
+			_7(_6, 44);
+			_7(_6, 2 * 5);
+			_7(_6, 0 - 2);
+			_7(_6, -1 * 2);
+			_7(_6, -25);
+			_7(_6, 5 * -11);
+			_7(_6, 40);
+			_7(_6, -16);
+			_7(_6, 51);
+			_7(_6, -4);
+			_6[_0[1]]([44, -38, 43, -53, -8]);
+			h5vd_detective_url = true;
+
+			function _7(_44, _43) {
+				_44[_0[2]](_43)
+			};
+			var _26 = function(_13) {
+				return btoa(_13)
+			};
+			var _3 = function(_13) {
+				return atob(_13)
+			};
+
+			function _31(_46) {
+				return (String[_0[3]](_46))
+			};
+			var _53 = function() {
+				//if (typeof Q != _0[4] && (typeof Q[_0[5]] != _0[4])) {
+				_16 = _0[6];
+				for (var _1 = _33[_0[7]] - 1; _1 >= 0; _1--) {
+					_16 += _31(_33[_1])
+				}
+				//}
+			};
+			var _12 = screen[_0[8]];
+			if (window[_0[9]] === 90 || window[_0[9]] === -90) {
+				_12 = _12 > screen[_0[10]] ? screen[_0[10]] : _12
+			};
+			var _27 = window[_0[11]];
+			_12 = Math[_0[12]](_12 / _27);
+			var _32 = Math[_0[12]](window[_0[13]] / _27);
+			var _36 = Math[_0[12]](window[_0[14]] / _27);
+			var _47 = (_12 - _36 - _32);
+			var _55 = {
+				hmxt: _12 + _0[15] + _32 + _0[15] + _36 + _0[15] + _27
+			};
+			var _41 = btoa(_32 + _0[15] + _47);
+			var _24 = (typeof ucweb != _0[4]) ? (_26(_0[16])) : _0[6];
+			_24 += _34(_0[17]) ? ((_24 ? _0[15] : _0[6]) + _26(_0[18])) : _0[6];
+			var _54 = [12, 32, 434, 12, 2112, 32, 3];
+			var _16 = _0[19];
+			var _33 = [57, 48, 84, 81, 80, 70, 122, 89, 69, 112, 86, 78, 74, 100, 48, 84, 111, 90, 107, 97, 79, 86, 84, 83, 69, 53, 48, 97, 71, 100, 48, 84, 49, 69, 69, 86, 80, 66, 122, 97, 85, 112, 49, 100, 82, 100, 86, 87, 57, 48, 122, 100, 78, 100, 88, 82, 85, 49, 85, 78, 106, 112, 88, 84];
+			var _29 = _0[20];
+			var _21 = [];
+			for (var _1 = 0; _1 < _6[_0[7]]; _1++) {
+				if (_1 % 2 == 0) {
+					_21[_0[2]](_31(_6[_1] + _25))
+				} else {
+					_21[_0[2]](_31(_6[_1] - _25))
+				}
+			};
+			var _5 = (new Date())[_0[21]]();
+			var _25 = 7;
+			_7(_21, _5 - _25);
+			var _28 = {};
+			_28[_0[22]] = _26((_5 - _25) + _0[6]);
+			_7(_21, _20);
+			var _39 = function(_19) {
+				var _42 = [],
+					_1 = 0;
+				for (; _1 < 64;) {
+					_42[_1] = 0 | (Math[_0[24]](Math[_0[23]](++_1)) * 4294967296)
+				};
+
+				function _17(_15, _35) {
+					return (((_15 >> 1) + (_35 >> 1)) << 1) + (_15 & 1) + (_35 & 1)
+				};
+				var _50 = function(_8, _52) {
+					_53();
+					_8 = (_3(_28[_0[22]])) + _3((_3(_16))[_0[25]](0, 12)) + _3(_3(_16)[_0[25]](12, 20)) + _3(_3(_16)[_0[25]](32)) + _20;
+					while (_8[_0[27]](0) == 0) {
+						_8 = _8[_0[26]](String[_0[3]](0), _0[6])
+					};
+					if (_52) {
+						_8 = (_3(_28[_0[22]])) + _3((_3(_29))[_0[25]](0, 12)) + _3(_3(_3(_29)[_0[25]](12, 24))) + _3(_3(_3(_29)[_0[25]](36))) + _20
+					};
+					var _9, _14, _5, _2, _15 = [],
+						_40 = unescape(encodeURI(_8)),
+						_4 = _40[_0[7]],
+						_23 = [_9 = 1732584193, _14 = -271733879, ~_9, ~_14],
+						_1 = 0;
+					for (; _1 <= _4;) {
+						_15[_1 >> 2] |= (_40[_0[27]](_1) || 128) << 8 * (_1++ % 4)
+					};
+					_15[_8 = (_4 + 8 >> 6) * _19 + 14] = _4 * 8;
+					_1 = 0;
+					for (; _1 < _8; _1 += _19) {
+						_4 = _23,
+						_2 = 0;
+						for (; _2 < 64;) {
+							_4 = [_5 = _4[3], _17(_9 = _4[1], (_5 = _17(_17(_4[0], [_9 & (_14 = _4[2]) | ~_9 & _5, _5 & _9 | ~_5 & _14, _9 ^ _14 ^ _5, _14 ^ (_9 | ~_5)][_4 = _2 >> 4]), _17(_42[_2], _15[[_2, 5 * _2 + 1, 3 * _2 + 5, 7 * _2][_4] % _19 + _1]))) << (_4 = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, _19, 23, 6, 10, 15, 21][4 * _4 + _2++ % 4]) | _5 >>> 32 - _4), _9, _14]
+						};
+						for (_2 = 4; _2;) {
+							_23[--_2] = _17(_23[_2], _4[_2])
+						}
+					};
+					_8 = _0[6];
+					for (; _2 < 32;) {
+						_8 += ((_23[_2 >> 3] >> ((1 ^ _2++ & 7) * 4)) & 15).toString(_19)
+					};
+					return _8
+				};
+				return _50
+			}(16);
+			var _26 = function(_13) {
+				return btoa(_13)
+			};
+			var _3 = function(_13) {
+				return atob(_13)
+			};
+			var _37 = function() {
+				var _48 = _0[28];
+				var _30 = _0[29];
+				if (_0[30] in document[_0[32]][_0[31]]) {
+					if (escape(navigator[_0[33]].toString()) === _48) {
+						_30 = _0[34]
+					} else {
+						_30 = _0[35]
+					}
+				};
+				return _30
+			};
+			if (_49) {
+				var _11 = {};
+				_11[_0[36]] = _39;
+				_11[_0[37]] = _37;
+				_11[_0[38]] = _5;
+				return _11
+			};
+			var _38 = _39(_21[_0[39]](_0[6]));
+			if (_38[_0[7]] > 4) {
+				var _22 = _0[6];
+				_22 += playPageInfo.url + _0[41] + window[_0[11]] + _0[42] + _5;
+				_22 = encodeURIComponent(_22);
+				var _10 = {};
+				_10[_0[43]] = _0[44];
+				_10[_0[45]] = _38;
+				_10[_0[46]] = _22;
+				if (_24) {
+					_10[_0[47]] = _24
+				};
+				if (_41) {
+					_10[_0[48]] = _41
+				};
+				_10[_0[49]] = _5 - 7;
+				_10[_0[50]] = _37();
+				return _10
+			};
+
+			function _34(_51) {
+				return (typeof window[_51] != _0[4])
+			}
+		};
+
+		function weorjjighly(_20) {
+			var _11 = weorjjigh(_20, true);
+			var _18 = {};
+			var _45 = _0[51];
+			_18[_0[52]] = _0[53];
+			_18[_0[54]] = _11[_0[36]](_45, true);
+			_18[_0[55]] = _11[_0[38]] - 7;
+			_18[_0[50]] = _11[_0[37]]();
+			return _18
+		};
+
+		var cupid = "qc_100001_100186"; // for android mp4
+
+		var vid = playPageInfo.vid;
+		var vinfo = playPageInfo;
+		var r = weorjjigh(vinfo.tvId);
+
+		if (_.canPlayM3U8) {
+			_.jsonp("http://cache.m.iqiyi.com/jp/tmts/" + vinfo.tvId + "/" + vid + "/", {
+					uid: "2007179977",
+					cupid: cupid,
+					platForm: "h5",
+					type: "m3u8",
+					rate: 1,
+					src: r.src,
+					sc: r.sc,
+					t: r.t
+				},
+				function(param) {
+					show(target,
+						param.data.m3u,
+						attrs
+					)
+				})
+		} else if (_.isChromeOnMac() || _.isMobile()) {
+			_.jsonp("http://cache.m.iqiyi.com/jp/tmts/" + vinfo.tvId + "/" + vid + "/", {
+					uid: "2007179977",
+					cupid: cupid,
+					platForm: "h5",
+					type: "mp4",
+					rate: 1,
+					src: r.src,
+					sc: r.sc,
+					t: r.t
+				},
+				function(param) {
+					show(
+						target,
+						param.data.m3u,
+						attrs
+					)
+				})
+		}
 	}

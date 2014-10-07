@@ -110,7 +110,7 @@ function wp_video_shortcode_callback( $atts,$content ) {
 			playPageInfo.vid="'.$videoid.'";
 			playPageInfo.url="http://m.iqiyi.com/v_19rrnkcdx4.html";
 
-			iqiyi("'.$vid.'",playPageInfo,"wp_video_'.$wp_video_id.'",{"height":'.$height.',"width":'.$width.'});
+			iqiyi(playPageInfo,"wp_video_'.$wp_video_id.'",{"height":'.$height.',"width":'.$width.'});
 		</script>
 	';
 	}
