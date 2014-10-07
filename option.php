@@ -33,13 +33,12 @@
 <div id="wpbody">
 <h2>wp-video短代码提示</h2>
     <div class="arconix-box-menu">
-      <h3><a href="http://www.idayer.com/my-first-plugin-wp-video.html">插件主页</a> <a href="http://www.idayer.com/my-first-plugin-wp-video.html">帮助与支持</a> </h3>
-    	<span style="color: #ff0000;"><h3>更多精彩内容欢迎关注：<a href="http://www.idayer.com/my-first-plugin-wp-video.html">理想乡</a></h3></span>
+    	<span style="color: #ff0000;"><h3><a href="http://www.idayer.com/my-first-plugin-wp-video.html">理想乡</a></h3></span>
 	<h3>1.写文章时如果需要可以手写加入下列短代码</h3>
 	
       <blockquote>短代码：<code>[video width="宽" height="高"]视频Url[/video]</code></blockquote>
 	<h3>2.同时,也可以使用插入按钮</h3>  
-	<p><img src="<?php echo WP_PLUGIN_URL; ?>/wp-video/post-input-button.jpg" width="520px"/></p>
+	<p><img src="<?php echo WP_PLUGIN_URL; ?>/wp_video/post-input-button.jpg" width="520px"/></p>
 	  
   </div>
 </div>
