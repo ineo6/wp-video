@@ -22,11 +22,12 @@ function wp_video_shortcode_callback( $atts,$content ) {
 	}else{
 		$wp_video_id = 1;
 	}
-
+    if($content==""){
+		return wp_video_shortcode($atts,$content);
+	}
+	else{
 	$result="";
 	
-
-
 	//youku
 	if(preg_match('#http://v.youku.com/v_show/id_(.*?).html#i',$content,$matches)){
 		$result=makeRequest($content);
@@ -34,7 +35,7 @@ function wp_video_shortcode_callback( $atts,$content ) {
 			$videoId=$matches2[1];
 		}
 		$result= '
-		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src="http://player.youku.com/player.php/sid/XNzA2MzgwNzU2/v.swf?VideoIDS='.$matches[1].'&winType=adshow&isAutoPlay=false" allowFullScreen="true" quality="high" width="'.$width.'" height="'.$height.'" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash"></embed></p>
+		<p id="wp_video_'.$wp_video_id.'" style="text-align: center;"><embed src="http://player.youku.com/player.php/sid/'.$matches[1].'/v.swf" allowFullScreen="true" quality="high" width="'.$width.'" height="'.$height.'" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash"></embed></p>
 		<script type="text/javascript">
 			youku("'.$videoId.'","wp_video_'.$wp_video_id.'",{"height":'.$height.',"width":'.$width.'});
 		</script>
@@ -192,6 +193,7 @@ function wp_video_shortcode_callback( $atts,$content ) {
 	}
 
 	return $result;
+	}
 }
 
 
