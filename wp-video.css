@@ -1,0 +1,10 @@
+.wp_video{
+	text-align: center;
+	max-width: 100%; 
+	height:auto;
+}
+
+.wp_video video{
+	background-color: #000;
+	border-radius: 10px;
+}

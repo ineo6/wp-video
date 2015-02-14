@@ -57,7 +57,7 @@
 		return out && out.appendChild(t) || t
 	};
 	_.jsonp = function(url, param, callback, handler) {
-		var scr, back = "HTML5PlayerBookMarkCodeByZythum" + +(new Date) + Math.random().toString().replace(".", "");
+		var scr, back = "HTML5PlayerCallBack" + +(new Date) + Math.random().toString().replace(".", "");
 		var hasQuery = url.indexOf("?") >= 0;
 		param = _.queryString(param);
 		if (param.length) param = (hasQuery ? "&" : "?") + param;
@@ -93,6 +93,36 @@
 			return false;
 		}
 	}
+	_.cookie = {
+		get: function(e) {
+			var t = null;
+			var n = new RegExp("(^| )" + e + "=([^;]*)(;|$)"),
+				r = n.exec(document.cookie);
+			if (r) {
+				t = r[2] || ""
+			}
+			if ("string" == typeof t) {
+				t = decodeURIComponent(t);
+				return t
+			}
+			return ""
+		},
+		set: function(e, t, n) {
+			n = n || {};
+			t = encodeURIComponent(t);
+			var r = n.expires;
+			if ("number" == typeof n.expires) {
+				r = new Date;
+				r.setTime(r.getTime() + n.expires)
+			}
+			document.cookie = e + "=" + t + (n.path ? "; path=" + n.path : "") + (r ? "; expires=" + r.toGMTString() : "") + (n.domain ? "; domain=" + n.domain : "") + (n.secure ? "; secure" : "")
+		},
+		remove: function(e, t) {
+			t = t || {};
+			t.expires = new Date(0);
+			_.cookie.set(e, "", t)
+		}
+	};
 
 	//main
 	function show(elementId, url, attrs) {
@@ -106,6 +136,9 @@
 				"width": attrs.width,
 				"height": attrs.height
 			}, flash);
+
+			//
+			//jQuery(".wp_video").fitVids();
 		} catch (e) {}
 	}
 
@@ -169,7 +202,7 @@
 				G += z.segment ? "&segment=" + z.segment : "";
 
 			} else {
-				//Œﬁ◊ ‘¥
+				//Êó†ËµÑÊ∫ê
 			}
 			return G;
 		}
@@ -197,17 +230,19 @@
 	}
 
 	function sina(vid, apiOrder, target, attrs) {
-		if (apiOrder == 1) {
-			_.jsonp("http://video.sina.com.cn/interface/video_ids/video_ids.php", {
-				v: vid
-			}, function(param) {
-				var ipad_id = param.ipad_vid;
-				var mp4 = "http://v.iask.com/v_play_ipad.php?vid=" + ipad_id + "&tags=newsList_web";
-				show(target, mp4, attrs);
-			})
-		} else if (apiOrder == 2) {
-			show(target,
-				"http://v.iask.com/v_play_ipad.php?vid=" + vid + "&tags=newsList_web", attrs);
+		if (_.isChromeOnMac() || _.isMobile()) {
+			if (apiOrder == 1) {
+				_.jsonp("http://video.sina.com.cn/interface/video_ids/video_ids.php", {
+					v: vid
+				}, function(param) {
+					var ipad_id = param.ipad_vid;
+					var mp4 = "http://v.iask.com/v_play_ipad.php?vid=" + ipad_id + "&tags=newsList_web";
+					show(target, mp4, attrs);
+				})
+			} else if (apiOrder == 2) {
+				show(target,
+					"http://v.iask.com/v_play_ipad.php?vid=" + vid + "&tags=newsList_web", attrs);
+			}
 		}
 	}
 
@@ -405,9 +440,9 @@
 				var oip = a.ip;
 				show(target,
 					"http://pl.youku.com/playlist/m3u8?vid=" + _id + "&type=flv&ctype=12&keyframe=1&ep=" + ep + "&sid=" + sid + "&token=" + token + "&ev=1&oip=" + oip
-					// "±Í«Â": "http://pl.youku.com/playlist/m3u8?vid=" + _id + "&type=flv&ctype=12&keyframe=1&ep=" + ep + "&sid=" + sid + "&token=" + token + "&ev=1&oip=" + oip,
-					// "∏ﬂ«Â": "http://pl.youku.com/playlist/m3u8?vid=" + _id + "&type=mp4&ctype=12&keyframe=1&ep=" + ep + "&sid=" + sid + "&token=" + token + "&ev=1&oip=" + oip,
-					// "≥¨«Â": "http://pl.youku.com/playlist/m3u8?vid=" + _id + "&type=hd2&ctype=12&keyframe=1&ep=" + ep + "&sid=" + sid + "&token=" + token + "&ev=1&oip=" + oip
+					// "Ê†áÊ∏Ö": "http://pl.youku.com/playlist/m3u8?vid=" + _id + "&type=flv&ctype=12&keyframe=1&ep=" + ep + "&sid=" + sid + "&token=" + token + "&ev=1&oip=" + oip,
+					// "È´òÊ∏Ö": "http://pl.youku.com/playlist/m3u8?vid=" + _id + "&type=mp4&ctype=12&keyframe=1&ep=" + ep + "&sid=" + sid + "&token=" + token + "&ev=1&oip=" + oip,
+					// "Ë∂ÖÊ∏Ö": "http://pl.youku.com/playlist/m3u8?vid=" + _id + "&type=hd2&ctype=12&keyframe=1&ep=" + ep + "&sid=" + sid + "&token=" + token + "&ev=1&oip=" + oip
 					,
 					attrs
 				)
@@ -568,33 +603,41 @@
 				});
 		}
 
+		function getTudou(i) {
+
+			_.jsonp("http://v.youku.com/player/getPlaylist/VideoIDS/" + _id + "/Pf/4/Sc/2", {
+				ctype: 62,
+				ev: 1
+			}, function(s) {
+				var l = s.data[0];
+				var d = s.controller || {};
+				var c = s.user || {};
+				var u = l.show || {};
+				var h = {
+					download: d.download_disabled || false,
+					xplayer: d.xplayer_disable || false,
+					app: d.app_disable || false,
+					stage: parseInt(u.stage) || 1,
+					isVip: c.vip || false
+				};
+				var m = y(l);
+				if (l.error_code && l.error_code < 0) {
+					h.errorCode = l.error_code;
+					n("", h)
+				} else if ("m3u8" == i)
+					show(target, x(m, 2, ""), attrs);
+				else if ("mp4" == i)
+					C(m, h)
+			}, "__callback")
+		}
+
 		var O = P(f, 0);
 		var N = P(f, 1);
-		var i = _.canPlayM3U8 ? "m3u8" : "mp4";
-		_.jsonp("http://v.youku.com/player/getPlaylist/VideoIDS/" + _id + "/Pf/4/Sc/2", {
-			ctype: 62,
-			ev: 1
-		}, function(s) {
-			var l = s.data[0];
-			var d = s.controller || {};
-			var c = s.user || {};
-			var u = l.show || {};
-			var h = {
-				download: d.download_disabled || false,
-				xplayer: d.xplayer_disable || false,
-				app: d.app_disable || false,
-				stage: parseInt(u.stage) || 1,
-				isVip: c.vip || false
-			};
-			var m = y(l);
-			if (l.error_code && l.error_code < 0) {
-				h.errorCode = l.error_code;
-				n("", h)
-			} else if ("m3u8" == i)
-				show(target, x(m, 2, ""), attrs);
-			else if ("mp4" == i)
-				C(m, h)
-		}, "__callback")
+
+		if (!_.canPlayM3U8)
+			getTudou("m3u8");
+		else if (_.isChromeOnMac() || _.isMobile())
+			getTudou("mp4");
 	}
 
 	function fivesix(vid, target, attrs) {
@@ -668,7 +711,8 @@
 				partner: 1
 			}, function(param) {
 				show(target,
-					param.data.url_high_mp4,
+					//param.data.url_high_mp4,download_url 
+					param.data.download_url,
 					attrs
 				)
 			})
@@ -696,198 +740,79 @@
 
 	function iqiyi(playPageInfo, target, attrs) {
 
-		var _0 = ["native_java_obj", "concat", "push", "fromCharCode", "undefined", "PageInfo", "", "length", "height", "orientation", "width", "devicePixelRatio", "round", "screenTop", "outerHeight", "_", "UCW", "_boluoWebView", "BOL", "TUROak1qbGlZelkwZWNhNDNlYmJhNTk3MWFjY01UazNORFF3T0E9PQ==", "TUROak1qbGlZdz09VG1wU2JGa3lSVEJOTWxacFdXMUZQUT09VGxSck0wMVhSbXBaZHowOQ==", "getTime", "cache", "sin", "abs", "substr", "replace", "charCodeAt", "function%20javaEnabled%28%29%20%7B%20%5Bnative%20code%5D%20%7D", "null", "WebkitAppearance", "style", "documentElement", "javaEnabled", "sgve", "sijsc", "md", "jc", "d", "join", "URL", ";", ";&tim=", "src", "d846d0c32d664d32b6b54ea48997a589", "sc", "__refI", "qd_jsin", "qd_wsz", "t", "__jsT", "jfakmkafklw23321f4ea32459", "__cliT", "h5", "__sigC", "__ctmM"];
-
-		function weorjjigh(_20, _49) {
-			if (_34(_0[0])) {
-				native_java_obj = {}
-			};
-			var _6 = [];
-			_7(_6, 44);
-			_7(_6, 2 * 5);
-			_7(_6, 0 - 2);
-			_7(_6, -1 * 2);
-			_7(_6, -25);
-			_7(_6, 5 * -11);
-			_7(_6, 40);
-			_7(_6, -16);
-			_7(_6, 51);
-			_7(_6, -4);
-			_6[_0[1]]([44, -38, 43, -53, -8]);
-			h5vd_detective_url = true;
-
-			function _7(_44, _43) {
-				_44[_0[2]](_43)
-			};
-			var _26 = function(_13) {
-				return btoa(_13)
-			};
-			var _3 = function(_13) {
-				return atob(_13)
-			};
-
-			function _31(_46) {
-				return (String[_0[3]](_46))
-			};
-			var _53 = function() {
-				//if (typeof Q != _0[4] && (typeof Q[_0[5]] != _0[4])) {
-				_16 = _0[6];
-				for (var _1 = _33[_0[7]] - 1; _1 >= 0; _1--) {
-					_16 += _31(_33[_1])
-				}
-				//}
-			};
-			var _12 = screen[_0[8]];
-			if (window[_0[9]] === 90 || window[_0[9]] === -90) {
-				_12 = _12 > screen[_0[10]] ? screen[_0[10]] : _12
-			};
-			var _27 = window[_0[11]];
-			_12 = Math[_0[12]](_12 / _27);
-			var _32 = Math[_0[12]](window[_0[13]] / _27);
-			var _36 = Math[_0[12]](window[_0[14]] / _27);
-			var _47 = (_12 - _36 - _32);
-			var _55 = {
-				hmxt: _12 + _0[15] + _32 + _0[15] + _36 + _0[15] + _27
-			};
-			var _41 = btoa(_32 + _0[15] + _47);
-			var _24 = (typeof ucweb != _0[4]) ? (_26(_0[16])) : _0[6];
-			_24 += _34(_0[17]) ? ((_24 ? _0[15] : _0[6]) + _26(_0[18])) : _0[6];
-			var _54 = [12, 32, 434, 12, 2112, 32, 3];
-			var _16 = _0[19];
-			var _33 = [57, 48, 84, 81, 80, 70, 122, 89, 69, 112, 86, 78, 74, 100, 48, 84, 111, 90, 107, 97, 79, 86, 84, 83, 69, 53, 48, 97, 71, 100, 48, 84, 49, 69, 69, 86, 80, 66, 122, 97, 85, 112, 49, 100, 82, 100, 86, 87, 57, 48, 122, 100, 78, 100, 88, 82, 85, 49, 85, 78, 106, 112, 88, 84];
-			var _29 = _0[20];
-			var _21 = [];
-			for (var _1 = 0; _1 < _6[_0[7]]; _1++) {
-				if (_1 % 2 == 0) {
-					_21[_0[2]](_31(_6[_1] + _25))
-				} else {
-					_21[_0[2]](_31(_6[_1] - _25))
-				}
-			};
-			var _5 = (new Date())[_0[21]]();
-			var _25 = 7;
-			_7(_21, _5 - _25);
-			var _28 = {};
-			_28[_0[22]] = _26((_5 - _25) + _0[6]);
-			_7(_21, _20);
-			var _39 = function(_19) {
-				var _42 = [],
-					_1 = 0;
-				for (; _1 < 64;) {
-					_42[_1] = 0 | (Math[_0[24]](Math[_0[23]](++_1)) * 4294967296)
-				};
-
-				function _17(_15, _35) {
-					return (((_15 >> 1) + (_35 >> 1)) << 1) + (_15 & 1) + (_35 & 1)
-				};
-				var _50 = function(_8, _52) {
-					_53();
-					_8 = (_3(_28[_0[22]])) + _3((_3(_16))[_0[25]](0, 12)) + _3(_3(_16)[_0[25]](12, 20)) + _3(_3(_16)[_0[25]](32)) + _20;
-					while (_8[_0[27]](0) == 0) {
-						_8 = _8[_0[26]](String[_0[3]](0), _0[6])
-					};
-					if (_52) {
-						_8 = (_3(_28[_0[22]])) + _3((_3(_29))[_0[25]](0, 12)) + _3(_3(_3(_29)[_0[25]](12, 24))) + _3(_3(_3(_29)[_0[25]](36))) + _20
-					};
-					var _9, _14, _5, _2, _15 = [],
-						_40 = unescape(encodeURI(_8)),
-						_4 = _40[_0[7]],
-						_23 = [_9 = 1732584193, _14 = -271733879, ~_9, ~_14],
-						_1 = 0;
-					for (; _1 <= _4;) {
-						_15[_1 >> 2] |= (_40[_0[27]](_1) || 128) << 8 * (_1++ % 4)
-					};
-					_15[_8 = (_4 + 8 >> 6) * _19 + 14] = _4 * 8;
-					_1 = 0;
-					for (; _1 < _8; _1 += _19) {
-						_4 = _23,
-						_2 = 0;
-						for (; _2 < 64;) {
-							_4 = [_5 = _4[3], _17(_9 = _4[1], (_5 = _17(_17(_4[0], [_9 & (_14 = _4[2]) | ~_9 & _5, _5 & _9 | ~_5 & _14, _9 ^ _14 ^ _5, _14 ^ (_9 | ~_5)][_4 = _2 >> 4]), _17(_42[_2], _15[[_2, 5 * _2 + 1, 3 * _2 + 5, 7 * _2][_4] % _19 + _1]))) << (_4 = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, _19, 23, 6, 10, 15, 21][4 * _4 + _2++ % 4]) | _5 >>> 32 - _4), _9, _14]
-						};
-						for (_2 = 4; _2;) {
-							_23[--_2] = _17(_23[_2], _4[_2])
-						}
-					};
-					_8 = _0[6];
-					for (; _2 < 32;) {
-						_8 += ((_23[_2 >> 3] >> ((1 ^ _2++ & 7) * 4)) & 15).toString(_19)
-					};
-					return _8
-				};
-				return _50
-			}(16);
-			var _26 = function(_13) {
-				return btoa(_13)
-			};
-			var _3 = function(_13) {
-				return atob(_13)
-			};
-			var _37 = function() {
-				var _48 = _0[28];
-				var _30 = _0[29];
-				if (_0[30] in document[_0[32]][_0[31]]) {
-					if (escape(navigator[_0[33]].toString()) === _48) {
-						_30 = _0[34]
-					} else {
-						_30 = _0[35]
-					}
-				};
-				return _30
-			};
-			if (_49) {
-				var _11 = {};
-				_11[_0[36]] = _39;
-				_11[_0[37]] = _37;
-				_11[_0[38]] = _5;
-				return _11
-			};
-			var _38 = _39(_21[_0[39]](_0[6]));
-			if (_38[_0[7]] > 4) {
-				var _22 = _0[6];
-				_22 += playPageInfo.url + _0[41] + window[_0[11]] + _0[42] + _5;
-				_22 = encodeURIComponent(_22);
-				var _10 = {};
-				_10[_0[43]] = _0[44];
-				_10[_0[45]] = _38;
-				_10[_0[46]] = _22;
-				if (_24) {
-					_10[_0[47]] = _24
-				};
-				if (_41) {
-					_10[_0[48]] = _41
-				};
-				_10[_0[49]] = _5 - 7;
-				_10[_0[50]] = _37();
-				return _10
-			};
-
-			function _34(_51) {
-				return (typeof window[_51] != _0[4])
+		function weorjjigh(e, t, n, a, o, r) {
+			function i(e, t) {
+				return ((e >> 1) + (t >> 1) << 1) + (1 & e) + (1 & t)
 			}
-		};
 
-		function weorjjighly(_20) {
-			var _11 = weorjjigh(_20, true);
-			var _18 = {};
-			var _45 = _0[51];
-			_18[_0[52]] = _0[53];
-			_18[_0[54]] = _11[_0[36]](_45, true);
-			_18[_0[55]] = _11[_0[38]] - 7;
-			_18[_0[50]] = _11[_0[37]]();
-			return _18
-		};
+			function c(e, t, n, a) {
+				e > 0 && 5 > e ? n >= 0 ? p << 6 > t ? (a = [a[3], i(a[1], (S = i(i(a[0], [a[1] & a[2] | ~a[1] & a[3], a[3] & a[1] | ~a[3] & a[2], a[1] ^ a[2] ^ a[3], a[2] ^ (a[1] | ~a[3])][q = n >> 4]), i(_(j(n + 1)) * b | 0, A[[n, 5 * n + 1, 3 * n + 5, 7 * n][q] % 16 + (t++ >>> 6)]))) << (q = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21][4 * q + n % 4]) | S >>> 32 - q), a[1], a[2]], 63 & t ? c(e, t, 63 & t, a) : (x = [i(a[0], x[0]), i(a[1], x[1]), i(a[2], x[2]), i(a[3], x[3])], c(e, t + 960, 63 & t, x))) : A = [] : M ? c(12, t, 0, [1379551571, 1113935683, 859468107, 2067627832, 2001160031, 2049917026, 1380744535]) : c(13, t, 0, [993735481, 895706677, 993213745, 1027355960, 2004120360, 656635436, 2021338144, 2071493503]) : e > 6 && 10 > e ? (e = atob(unescape(a)), n < e.length ? (A[t >> 2] |= e.charCodeAt(n++) << 8 * (t % 4), c(9, ++t, n, T)) : (d(String.fromCharCode(81)) && (A[t >> 2] |= 1 << (t % 4 << 3) + 7), A[p = (t + 8 >> 6 << 4) + 14] = t << 3, c(3, 0, 0, x))) : e > 11 && 15 > e && (n < a.length << 2 ? (A[t >> 2] |= (a[n >> 2] >> 8 * (3 & n) & 255 ^ n++) << ((3 & t++) << 3), c(14, t, n, a)) : c(7, t, 0, T))
+			}
 
-		var cupid = "qc_100001_100186"; // for android mp4
+			function d(e) {
+				return "undefined" != typeof window[e]
+			}
+			var u = screen.height,
+				h = screen.width,
+				s = window.orientation;
+			(90 === s || -90 === s) && (u = u > h ? h : u);
+			var w = window.devicePixelRatio;
+			u = Math.round(u / w);
+			var f = Math.round(window.screenTop / w),
+				m = Math.round(window.outerHeight / w),
+				v = u - m - f,
+				g = btoa(f + "_" + v),
+				l = "",
+				b = 4294967296,
+				_ = Math.abs,
+				j = Math.sin,
+				p = "";
+
+			l += d("_0") ? (l ? "_" : "") + btoa("BOL") : "";
+			var M = t,
+				T = e,
+				y = 7,
+				k = {},
+				R = (new Date).getTime();
+			k.cache = (t ? r + "" + o : R - y) + "", T = escape(btoa(T)), k.cache = escape(btoa(M ? k.cache + a + "" + n : k.cache));
+			var S, q, x = [S = 1732584193, q = -271733879, ~S, ~q],
+				A = [],
+				B = function() {
+					for (p = atob(unescape(k.cache)), q = 0; q < p.length;)
+						A[q >> 2] |= p.charCodeAt(q) << 8 * (q++ % 4);
+					for (c(1, q, -1, A), p = "", S = 0; 32 > S;)
+						p += (x[S >> 3] >> 4 * (1 ^ 7 & S++) & 15).toString(16);
+					return p
+				},
+				D = function() {
+					var e = "function%20javaEnabled%28%29%20%7B%20%5Bnative%20code%5D%20%7D",
+						t = "null";
+					return "WebkitAppearance" in document.documentElement.style && (t = escape(navigator.javaEnabled.toString()) === e ? "sgve" : "sijsc"), t
+				};
+			if (t) {
+				var E = {};
+				return E.md = B, E.jc = D, E.d = R, E
+			}
+			var U = B();
+			if (U.length > 4) {
+				var W = "";
+				W += document.URL + ";" + window.devicePixelRatio + ";&tim=" + R, W = encodeURIComponent(W);
+				var L = {};
+				return L.src = "d846d0c32d664d32b6b54ea48997a589", L.sc = U, L.__refI = W, l && (L.qd_jsin = l), g && (L.qd_wsz = g), L.t = R - 7, L.__jsT = D(), L
+			}
+		}
+
 
 		var vid = playPageInfo.vid;
 		var vinfo = playPageInfo;
-		var r = weorjjigh(vinfo.tvId);
+
+		var r = "";
+		r = weorjjigh(vid);
 
 		if (_.canPlayM3U8) {
 			_.jsonp("http://cache.m.iqiyi.com/jp/tmts/" + vinfo.tvId + "/" + vid + "/", {
 					uid: "2007179977",
-					cupid: cupid,
+					cupid: "qc_100001_100103",
 					platForm: "h5",
 					type: "m3u8",
 					rate: 1,
@@ -904,7 +829,7 @@
 		} else if (_.isChromeOnMac() || _.isMobile()) {
 			_.jsonp("http://cache.m.iqiyi.com/jp/tmts/" + vinfo.tvId + "/" + vid + "/", {
 					uid: "2007179977",
-					cupid: cupid,
+					cupid: "qc_100001_100186",
 					platForm: "h5",
 					type: "mp4",
 					rate: 1,
