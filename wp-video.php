@@ -3,7 +3,7 @@
 Plugin Name: wp-video
 Plugin URI:  http://www.idayer.com/my-first-plugin-wp-video.html
 Description: 使用 [video] 短代码 在 WordPress 中插入视频,支持优酷,56,搜狐,爱奇艺,腾迅,新浪,PPTV。对于不同平台设备自动识别来加载视频源，PC端识别为flash，iOS平台(包括Mac)播放m3u8或MP4,其他移动终端播放MP4。
-Version:1.2
+Version:1.3
 Author: Neo
 Author URI: http://www.idayer.com/
 */
