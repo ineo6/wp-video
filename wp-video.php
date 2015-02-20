@@ -14,7 +14,7 @@ add_action('media_buttons','quick_button',20);
 
 add_shortcode( 'video', 'wp_video_shortcode_callback' );
 /* plugin-update-checker */
-require 'plugin-update-checker/plugin-update-checker.php';
+require 'plugin-update/plugin-update-checker.php';
 $className = PucFactory::getLatestClassVersion('PucGitHubChecker');
 $myUpdateChecker = new $className(
     'https://github.com/ineo6/wp_video/',
