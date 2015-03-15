@@ -634,7 +634,7 @@
 		var O = P(f, 0);
 		var N = P(f, 1);
 
-		if (!_.canPlayM3U8)
+		if (_.canPlayM3U8)
 			getTudou("m3u8");
 		else if (_.isChromeOnMac() || _.isMobile())
 			getTudou("mp4");
@@ -645,10 +645,12 @@
 			r: "",
 			src: "m"
 		}, function(param) {
-			urlList = param.df;
-			var urls = param.df[3].url;
-			if (_.canPlayM3U8 || _.isChromeOnMac() || _.isMobile())
-				show(target, urls, attrs);
+			if (param != null && param['df'] != undefined) {
+				var urlList = param.df;
+				var urls = urlList[urlList.length - 1].url;
+				if (_.canPlayM3U8 || _.isChromeOnMac() || _.isMobile())
+					show(target, urls, attrs);
+			}
 		})
 
 	}
