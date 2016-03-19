@@ -4,15 +4,14 @@ wp-video插件根据shortcode短代码功能制作的视频插件。
 ##介绍##
 目前支持视频网站：
 
-优酷
-
-土豆
-<del>56</del>
-<del>搜狐</del>
-<del>爱奇艺</del>
-腾迅
-<del>新浪</del>
-PPTV
+* 优酷
+* 土豆
+* <del>56</del>
+* <del>搜狐</del>
+* <del>爱奇艺</del>
+* 腾迅
+* <del>新浪</del>
+* PPTV
 
 
 PC和移动终端均支持。PC端识别为flash，iOS平台(包括Mac)播放m3u8或MP4,其他移动终端播放MP4。
