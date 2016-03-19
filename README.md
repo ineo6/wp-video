@@ -5,6 +5,7 @@ wp-video插件根据shortcode短代码功能制作的视频插件。
 目前支持视频网站：
 
 优酷
+
 土豆
 <del>56</del>
 <del>搜狐</del>
