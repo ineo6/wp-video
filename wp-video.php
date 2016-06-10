@@ -3,7 +3,7 @@
 Plugin Name: wp-video
 Plugin URI:  http://www.idayer.com/my-first-plugin-wp-video.html
 Description: 使用 [video] 短代码 在 WordPress 中插入视频,支持优酷,腾迅,PPTV。对于不同平台设备自动识别来加载视频源，PC端识别为flash，iOS平台(包括Mac)播放m3u8或MP4,其他移动终端播放MP4。
-Version:1.3.3
+Version:1.3.4
 Author: Neo
 Author URI: http://www.idayer.com/
 */
@@ -113,11 +113,13 @@ function wp_video_shortcode_callback($atts, $content)
             if (preg_match('#vid=(\w+)#i', $content, $matches)) {
                 $qq = $matches[1];
             } else {
+                //v.qq.com/page or miss vid
                 $result = makeRequest($content);
                 if (preg_match('#vid:"(\w+)"#i', $result, $matches)) {
                     $qq = $matches[1];
                 }
             }
+
             $qJson = "http://vv.video.qq.com/geturl?otype=json&vid=" . $qq . "&charge=0&callback=qqback";
 
             $result = '
@@ -180,10 +182,13 @@ function makeRequest($url, $refer = "")
     curl_setopt($curl, CURLOPT_URL, $url);
     curl_setopt($curl, CURLOPT_REFERER, $url);
     curl_setopt($curl, CURLOPT_HEADER, 0);
-    curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.64 Safari/537.31");
+     curl_setopt($curl, CURLOPT_HTTPHEADER,array('Accept-Encoding: gzip, deflate'));
+    curl_setopt($curl, CURLOPT_ENCODING, 'gzip,deflate');
+    curl_setopt($curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.73 Safari/537.36");
     // 设置cURL 参数，要求结果保存到字符串中还是输出到屏幕上。
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
     $data = curl_exec($curl);
+
     curl_close($curl);
     return $data;
 }
