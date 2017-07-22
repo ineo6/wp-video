@@ -1,10 +1,10 @@
-#wp-video Wordpress视频插件#
+# wp-video Wordpress视频插件
 
 wp-video插件根据shortcode短代码功能制作的视频插件。
 
-##Important 项目不再更新！##
+## Important 项目不再更新！
 
-##介绍##
+## 介绍 
 目前支持视频网站：
 
 * 优酷
@@ -21,7 +21,7 @@ PC和移动终端均支持。PC端识别为flash，iOS平台(包括Mac)播放m3u
 
 同时支持WordPress本地上传视频的原生Video短代码。
 
-##用法##
+## 用法 
 
 注意：空间必须要支持cUrl
 
