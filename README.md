@@ -1,6 +1,10 @@
 #wp-video Wordpress视频插件#
 
 wp-video插件根据shortcode短代码功能制作的视频插件。
+
+## Important 项目不再更新！
+
+
 ##介绍##
 目前支持视频网站：
 
